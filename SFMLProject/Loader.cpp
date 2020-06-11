@@ -30,6 +30,11 @@ void Loader::loadTexture(sf::Texture * texture, std::string path) {
 	}
 }
 
+void Loader::loadSound(sf::SoundBuffer * sound, std::string path) {
+	if (!sound->loadFromFile(path)) {
+		std::cout << "Cant load file from path: " << path << std::endl;
+	}
+}
 
 void Loader::worldBuilder(std::vector<Wall> *wallArray, Wall * wall) {
 	for (int i = 0; i < HEIGH; i++) {

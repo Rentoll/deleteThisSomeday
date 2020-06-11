@@ -18,7 +18,7 @@ public:
 	void draw(sf::RenderWindow *window, std::vector<Enemy> *enemyArray);
 	void draw(sf::RenderWindow *window, std::vector<Projectile> *projectileArray);
 	void draw(sf::RenderWindow *window, std::vector<pickUp> *pickUpArray);
-	void draw(sf::RenderWindow *window, Boss *boss, sf::Font font, sf::Clock *clock4, sf::Time *elapsedBoss, Projectile *projectile1, std::vector<Projectile> * projectileArray);
+	void draw(sf::RenderWindow *window, Boss *boss, sf::Font font, sf::Clock *clock4, sf::Time *elapsedBoss, Projectile *projectile1, std::vector<Projectile> * projectileArray, sf::SoundBuffer fireballSound);
 	//deleting things
 	void del(sf::RenderWindow *window, std::vector<Enemy> *enemyArray, std::vector<pickUp> *pickUpArray, pickUp *pickUp1, Stage *stage, sf::Texture *questionTexture, sf::Texture *healPotionTexture, sf::Texture *powerupTexture);
 	//storytelling

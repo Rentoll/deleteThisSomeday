@@ -31,6 +31,7 @@ void GameEngine::run() {
 	font.loadFromFile("Fonts/CyrilicOld.TTF");
 	//player init
 	Player player1;
+	player1.direction = 1;
 	sf::Texture playerTexture;
 	sf::Texture angryZero;
 	sf::Texture angryOne;
@@ -45,6 +46,26 @@ void GameEngine::run() {
 	sf::Texture welcomeScreen;
 	sf::Texture winningScreen;
 	sf::Texture loosingScreen;
+
+	sf::Music music;
+	if (!music.openFromFile("Music/Mazur Always with me always with you.ogg"))
+		std::cout << "ERRRRROOOOOOOOOOOOOOOOOR"; 
+
+	sf::SoundBuffer win;
+	sf::SoundBuffer correctAnswer;
+	sf::SoundBuffer fireballShoot;
+	sf::SoundBuffer fireballOnTarget;
+	sf::SoundBuffer pickUpSound;
+	sf::SoundBuffer enemyDeath;
+	sf::SoundBuffer gameOver;
+
+	sf::Sound winSound;
+	sf::Sound correctAnswerSound;
+	sf::Sound fireballShootSound;
+	sf::Sound fireballOnTargetSound;
+	sf::Sound pickUpSoundSound;
+	sf::Sound enemyDeathSound;
+	sf::Sound gameOverSound;
 
 	Loader loader;
 	loader.loadTexture(&playerTexture, "Images/Player.png");
@@ -62,6 +83,22 @@ void GameEngine::run() {
 	loader.loadTexture(&loosingScreen, "Images/loosingScreen.png");
 	loader.loadTexture(&bossTexture, "Images/firstBoss.png");
 
+	loader.loadSound(&win, "Sounds/win.ogg");
+	loader.loadSound(&correctAnswer, "Sounds/correctAnswer.ogg");
+	loader.loadSound(&fireballShoot, "Sounds/fireballShoot.ogg");
+	loader.loadSound(&fireballOnTarget, "Sounds/fireballOnTarget.ogg");
+	loader.loadSound(&pickUpSound, "Sounds/pickUp.ogg");
+	loader.loadSound(&enemyDeath, "Sounds/enemyDeath.ogg");
+	loader.loadSound(&gameOver, "Sounds/gameOver.ogg");
+
+	winSound.setBuffer(win);
+	correctAnswerSound.setBuffer(correctAnswer);
+	fireballShootSound.setBuffer(fireballShoot);
+	fireballOnTargetSound.setBuffer(fireballOnTarget);
+	pickUpSoundSound.setBuffer(pickUpSound);
+	enemyDeathSound.setBuffer(enemyDeath);
+	gameOverSound.setBuffer(gameOver);
+
 	//wall vector array
 	std::vector<Wall>::const_iterator iterWall;
 	std::vector<Wall> wallArray;
@@ -70,7 +107,7 @@ void GameEngine::run() {
 	loader.worldBuilder(&wallArray, &wall1);
 
 	player1.sprite.setTexture(playerTexture);
-
+	player1.rect.setPosition(100, 100);
 	//////
 	sf::Sprite questionSprite;
 	questionSprite.setTexture(firstQuestion);
@@ -88,6 +125,7 @@ void GameEngine::run() {
 	loosingScreenSprite.setTexture(loosingScreen);
 	loosingScreenSprite.setPosition(0, 0);
 	//////
+	music.play();
 	drawStoryScreen(&window, &welcomeScreenSprite, &view1);
 	Boss boss;
 
@@ -108,6 +146,7 @@ void GameEngine::run() {
 		loader.enemyBuilderFirstLevel(&enemyArray, &enemy1, &stage, &angryZero, &angryOne, &angryTwo);
 		boss.sprite.setTexture(bossTexture);
 		boss.rect.setPosition(1000, 1000);
+		boss.agro = false;
 		break;
 	default:
 		break;
@@ -220,11 +259,11 @@ void GameEngine::run() {
 						}					
 						if (playerInput == "0.25") {
 							question = false;
-							//boss.agro = true;
-							boss.rect.setPosition(1000, 1000);
+							correctAnswerSound.play();
+							boss.agro = true;
+							//boss.rect.setPosition(1000, 1000);
 							wallArray[counter1].deck = false;
 							wallArray[counter1].walkable = true;
-							break;
 						}
 						window.clear();
 						window.draw(questionSprite);
@@ -315,6 +354,7 @@ void GameEngine::run() {
 				if (pickUpArray[counter1].isPartOfQuestion) {
 					player1.numOfQuestions++;
 				}
+				pickUpSoundSound.play();
 				pickUpArray[counter1].destroy = true;
 			}
 			counter1++;
@@ -340,6 +380,8 @@ void GameEngine::run() {
 					player1.powerup = false;
 				}
 				if (player1.hp <= 0) {
+					music.stop();
+					gameOverSound.play();
 					drawStoryScreen(&window, &loosingScreenSprite, &view1);
 					exit(0);
 				}
@@ -355,6 +397,7 @@ void GameEngine::run() {
 				if (projectileArray[counter1].rect.getGlobalBounds().intersects(wallArray[counter2].rect.getGlobalBounds())) {
 					if (wallArray[counter2].walkable == false) {
 						projectileArray[counter1].destroy = true;
+						fireballOnTargetSound.play();
 						if (wallArray[counter2].destructable) {
 							wallArray[counter2].hp -= projectileArray[counter1].attackDamage;
 							if (wallArray[counter2].hp <= 0) {
@@ -373,7 +416,6 @@ void GameEngine::run() {
 		counter1 = 0;
 		for (iter4 = enemyArray.begin(); iter4 != enemyArray.end(); iter4++) {
 			if (enemyArray[counter1].agro == true) {
-					int tmp = generateRandom(2);
 					if ( player1.rect.getPosition().y + 1 < enemyArray[counter1].rect.getPosition().y) {
 						enemyArray[counter1].counter = 0;
 						enemyArray[counter1].direction = 3;
@@ -395,7 +437,6 @@ void GameEngine::run() {
 		}
 
 		if (boss.agro == true) {
-			int tmp = generateRandom(2);
 			if (player1.rect.getPosition().y + 1 < boss.rect.getPosition().y) {
 				boss.counter = 0;
 				boss.direction = 3;
@@ -413,7 +454,7 @@ void GameEngine::run() {
 				boss.direction = 2;
 			}
 		}
-
+		//std::cout << boss.rect.getPosition().x << " " << boss.rect.getPosition().y << " " << boss.agro << std::endl;
 		//projectile collision
 		counter1 = 0;
 		for (iter = projectileArray.begin(); iter != projectileArray.end(); iter++) {
@@ -433,24 +474,7 @@ void GameEngine::run() {
 				}
 				if (enemyArray[counter2].hp <= 0) {
 					enemyArray[counter2].alive = false;
-				}
-
-				if (projectileArray[counter1].rect.getGlobalBounds().intersects(boss.rect.getGlobalBounds()) && projectileArray[counter1].enemyProjectile == false) {
-					projectileArray[counter1].destroy = true;
-
-					//text display
-					textDisplay1.text.setString(std::to_string(projectileArray[counter1].attackDamage));
-					textDisplay1.text.setPosition(boss.rect.getPosition().x, boss.rect.getPosition().y);
-					textArray.push_back(textDisplay1);
-
-					//std::cout << "collision\n";
-					boss.hp -= projectileArray[counter1].attackDamage;
-					boss.agro = true;
-				}
-				if (boss.hp <= 0) {
-					boss.alive = false;
-					drawStoryScreen(&window, &winningScreenSprite, &view1);
-					exit(0);
+					enemyDeathSound.play();
 				}
 				counter2++;
 			}
@@ -468,6 +492,31 @@ void GameEngine::run() {
 			}
 			counter1++;
 		}
+
+		counter1 = 0;
+		for (iter = projectileArray.begin(); iter != projectileArray.end(); iter++) {
+			counter2 = 0;
+			if (projectileArray[counter1].rect.getGlobalBounds().intersects(boss.rect.getGlobalBounds()) && projectileArray[counter1].enemyProjectile == false) {
+				projectileArray[counter1].destroy = true;
+				fireballOnTargetSound.play();
+				//text display
+				textDisplay1.text.setString(std::to_string(projectileArray[counter1].attackDamage));
+				textDisplay1.text.setPosition(boss.rect.getPosition().x, boss.rect.getPosition().y);
+				textArray.push_back(textDisplay1);
+
+				//std::cout << "collision\n";
+				boss.hp -= projectileArray[counter1].attackDamage;
+				boss.agro = true;
+			}
+			if (boss.hp <= 0) {
+				boss.alive = false;
+				music.stop();
+				winSound.play();
+				drawStoryScreen(&window, &winningScreenSprite, &view1);
+				exit(0);
+			}
+		}
+
 		//delete dead enemy
 		del(&window, &enemyArray, &pickUpArray, &pickUp1, &stage, &questionTexture, &healPotionTexture, &powerupTexture);
 
@@ -528,6 +577,7 @@ void GameEngine::run() {
 		if (elapsed1.asSeconds() >= 0.5f) {
 			clock1.restart();
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+				fireballShootSound.play();
 				player1.fireProjectile(&projectileArray, &projectile1);
 			}
 		}
@@ -535,7 +585,8 @@ void GameEngine::run() {
 		draw(&window, &wallArray);
 
 		//draw boss
-		draw(&window, &boss, font, &clock4, &elapsedBoss, &projectile1, &projectileArray);
+		if(boss.agro)
+			draw(&window, &boss, font, &clock4, &elapsedBoss, &projectile1, &projectileArray, fireballShoot);
 
 		//draw pick up items
 		draw(&window, &pickUpArray);
@@ -643,7 +694,7 @@ void GameEngine::draw(sf::RenderWindow *window, std::vector<pickUp> *pickUpArray
 	}
 }
 
-void GameEngine::draw(sf::RenderWindow *window, Boss *boss, sf::Font font, sf::Clock *clock4, sf::Time *elapsedBoss, Projectile *projectile1, std::vector<Projectile> * projectileArray) {
+void GameEngine::draw(sf::RenderWindow *window, Boss *boss, sf::Font font, sf::Clock *clock4, sf::Time *elapsedBoss, Projectile *projectile1, std::vector<Projectile> * projectileArray, sf::SoundBuffer fireballSound) {
 	sf::Text bossHP;
 	bossHP.setFont(font);
 	std::string buf = "[";
@@ -667,7 +718,7 @@ void GameEngine::draw(sf::RenderWindow *window, Boss *boss, sf::Font font, sf::C
 	window->draw(boss->sprite);
 	if (elapsedBoss->asSeconds() >= 5.0f) {
 		clock4->restart();
-		boss->shoot(projectileArray, projectile1);
+		boss->shoot(projectileArray, projectile1, fireballSound);
 	}
 }
 

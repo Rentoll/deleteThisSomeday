@@ -1,6 +1,9 @@
 #include "Boss.h"
 
-void Boss::shoot(std::vector <Projectile> *projectileArray, Projectile * projectile) {
+void Boss::shoot(std::vector <Projectile> *projectileArray, Projectile * projectile, sf::SoundBuffer fireballSound) {
+	sf::Sound tmp;
+	tmp.setBuffer(fireballSound);
+	tmp.play();
 	projectile->enemyProjectile = true;
 	projectile->rect.setPosition(rect.getPosition());
 	projectile->direction = 1;

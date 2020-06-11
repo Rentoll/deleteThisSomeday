@@ -2,6 +2,7 @@
 #define LOADER_H
 
 #include "SFML/Graphics.hpp"
+#include "SFML/Audio.hpp"
 #include <iostream>
 #include <vector>
 #include <fstream>
@@ -25,6 +26,7 @@ class Loader {
 public:
 	Loader();
 	void loadTexture(sf::Texture * texture, std::string path);
+	void loadSound(sf::SoundBuffer * sound, std::string path);
 	void worldBuilder(std::vector<Wall> *wallArray, Wall * wall);
 	void enemyBuilderFirstLevel(std::vector<Enemy> *enemyArray, Enemy * enemy, Stage *stage, sf::Texture * zero, sf::Texture * one, sf::Texture * two);
 };

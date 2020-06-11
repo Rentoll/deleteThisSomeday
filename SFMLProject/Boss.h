@@ -11,7 +11,7 @@ public:
 		this->hp = 15;
 		this->maxFrames = 2;
 	}
-	void shoot(std::vector <Projectile> *projectileArray, Projectile * projectile);
+	void shoot(std::vector <Projectile> *projectileArray, Projectile * projectile, sf::SoundBuffer fireballSound);
 };
 
 #endif 
